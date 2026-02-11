@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>FinMind Sniper – Controlled Quant Edition</title>
+<title>FinMind Sniper – 5 Stock Quant Engine</title>
 
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -19,25 +19,20 @@ body { background:#000; color:#e5e7eb; font-family: monospace; }
 
 <script type="text/babel">
 
-const { useState, useRef, useEffect } = React;
+const { useState, useRef } = React;
 
 function App(){
 
-const [ticker,setTicker] = useState("");
 const [apiKey,setApiKey] = useState("");
 const [capital,setCapital] = useState(100000);
 const [status,setStatus] = useState("IDLE");
-const [result,setResult] = useState(null);
-const [history,setHistory] = useState(JSON.parse(localStorage.getItem("trade_history")) || []);
+const [results,setResults] = useState([]);
+const [error,setError] = useState("");
 const [cooldown,setCooldown] = useState(false);
 
 const controllerRef = useRef(null);
 
-useEffect(()=>{
-localStorage.setItem("trade_history",JSON.stringify(history));
-},[history]);
-
-// MARKET CHECK
+// MARKET HOURS CHECK
 function isMarketOpen(){
 const now = new Date();
 const day = now.getDay();
@@ -52,14 +47,6 @@ const close = (hour<15 || (hour===15 && min<=30));
 return open && close;
 }
 
-// POSITION SIZE
-function positionSize(entry,stop){
-const risk = capital * 0.01;
-const diff = Math.abs(entry-stop);
-if(diff===0) return 0;
-return Math.floor(risk/diff);
-}
-
 // CONFIDENCE ENGINE
 function computeConfidence(d){
 let score = 0;
@@ -70,12 +57,22 @@ if(d.newsRecent) score+=25;
 return score;
 }
 
+// POSITION SIZE
+function positionSize(entry,stop){
+const riskPerTrade = capital * 0.01;
+const diff = Math.abs(entry-stop);
+if(diff===0) return 0;
+return Math.floor(riskPerTrade/diff);
+}
+
 async function scan(){
 
-if(!apiKey) return alert("Enter API Key");
-if(!ticker.match(/^[A-Z]+$/)) return alert("Invalid Ticker");
-if(!isMarketOpen()) return alert("Market Closed");
-if(cooldown) return alert("Wait 30 seconds before next scan");
+setError("");
+setResults([]);
+
+if(!apiKey) return setError("Enter API Key");
+if(!isMarketOpen()) return setError("Market Closed");
+if(cooldown) return setError("Wait 30 seconds");
 
 setCooldown(true);
 setTimeout(()=>setCooldown(false),30000);
@@ -89,6 +86,8 @@ const prompt = `
 Return STRICT JSON ONLY.
 
 {
+"stocks":[
+{
 "name":"",
 "price":number,
 "rsi":number,
@@ -99,15 +98,19 @@ Return STRICT JSON ONLY.
 "stopLoss":number,
 "action":"BUY or SHORT"
 }
+]
+}
 
-Stock: ${ticker} NSE
-Use latest available information.
+TASK:
+Scan NSE market RIGHT NOW.
+Return EXACTLY 5 stocks with strongest intraday breakout potential.
+Only include active high-volume stocks.
 `;
 
 try{
 
 const res = await fetch(
-`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
+`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
 {
 method:"POST",
 headers:{"Content-Type":"application/json"},
@@ -120,76 +123,75 @@ tools:[{google_search:{}}]
 );
 
 const data = await res.json();
-const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
 if(!text) throw new Error("Empty response");
 
+// CLEAN JSON
+text = text.replace(/```json/g,"")
+.replace(/```/g,"")
+.trim();
+
+const firstBrace = text.indexOf("{");
+const lastBrace = text.lastIndexOf("}");
+if(firstBrace===-1 || lastBrace===-1)
+throw new Error("Invalid AI format");
+
+text = text.substring(firstBrace,lastBrace+1);
+
 const parsed = JSON.parse(text);
 
-if(
-!parsed.name ||
-!parsed.price ||
-!parsed.target ||
-!parsed.stopLoss ||
-!parsed.action
-){
-throw new Error("Invalid AI structure");
-}
+if(!parsed.stocks || parsed.stocks.length===0)
+throw new Error("No stocks returned");
 
-const confidence = computeConfidence(parsed);
+let finalStocks = [];
 
-if(confidence<70){
-setResult({error:"Low confidence (<70%)"});
-setStatus("IDLE");
-return;
-}
-
-const qty = positionSize(parsed.price,parsed.stopLoss);
-
-const trade = {
-...parsed,
+parsed.stocks.forEach(stock=>{
+const confidence = computeConfidence(stock);
+if(confidence>=70){
+finalStocks.push({
+...stock,
 confidence,
-quantity: qty,
-time: new Date().toLocaleString()
-};
+quantity: positionSize(stock.price,stock.stopLoss)
+});
+}
+});
 
-setResult(trade);
-setHistory([trade,...history]);
+if(finalStocks.length===0)
+throw new Error("No high-confidence trades found");
+
+// SORT BY CONFIDENCE
+finalStocks.sort((a,b)=>b.confidence-a.confidence);
+
+setResults(finalStocks.slice(0,5));
 setStatus("IDLE");
 
 }catch(e){
-setResult({error:e.message});
+setError(e.message);
 setStatus("ERROR");
 }
 
 }
 
 return(
-<div className="p-6 space-y-4 max-w-xl mx-auto">
+<div className="p-6 space-y-4 max-w-2xl mx-auto">
 
 <h1 className="text-orange-500 text-xl font-bold">
-FinMind Sniper – Controlled Quant Edition
+FinMind Sniper – 5 Stock Quant Engine
 </h1>
 
 <input
-className="bg-gray-900 p-3 w-full rounded"
-placeholder="NSE Ticker (e.g. ADANIENT)"
-value={ticker}
-onChange={e=>setTicker(e.target.value.toUpperCase())}
-/>
-
-<input
 type="password"
-className="bg-gray-900 p-3 w-full rounded"
 placeholder="Gemini API Key"
+className="bg-gray-900 p-3 w-full rounded"
 value={apiKey}
 onChange={e=>setApiKey(e.target.value)}
 />
 
 <input
 type="number"
-className="bg-gray-900 p-3 w-full rounded"
 placeholder="Capital"
+className="bg-gray-900 p-3 w-full rounded"
 value={capital}
 onChange={e=>setCapital(Number(e.target.value))}
 />
@@ -199,35 +201,25 @@ onClick={scan}
 disabled={status==="SCANNING"}
 className="bg-orange-600 w-full p-3 rounded font-bold"
 >
-{status==="SCANNING" ? "Scanning..." : "Execute Scan"}
+{status==="SCANNING" ? "Scanning Market..." : "Scan NSE for 5 Trades"}
 </button>
 
-{result && (
-<div className="bg-gray-900 p-4 rounded text-sm">
-
-{result.error ? (
-<div className="text-red-500">{result.error}</div>
-):(
-<div className="space-y-1">
-<div>Stock: {result.name}</div>
-<div>Price: {result.price}</div>
-<div>Action: {result.action}</div>
-<div>Target: {result.target}</div>
-<div>Stop: {result.stopLoss}</div>
-<div>Confidence: {result.confidence}%</div>
-<div>Position Size: {result.quantity}</div>
-</div>
+{error && (
+<div className="text-red-500 bg-gray-900 p-3 rounded">{error}</div>
 )}
 
+{results.length>0 && (
+<div className="space-y-4">
+{results.map((r,i)=>(
+<div key={i} className="bg-gray-900 p-4 rounded text-sm space-y-1">
+<div className="text-orange-500 font-bold">
+#{i+1} {r.name} ({r.confidence}%)
 </div>
-)}
-
-{history.length>0 && (
-<div className="bg-gray-900 p-4 rounded text-xs">
-<div className="text-orange-500 mb-2">Trade History</div>
-{history.map((h,i)=>(
-<div key={i} className="border-b border-gray-800 py-1">
-{h.time} - {h.name} ({h.confidence}%)
+<div>Price: {r.price}</div>
+<div>Action: {r.action}</div>
+<div>Target: {r.target}</div>
+<div>Stop: {r.stopLoss}</div>
+<div>Position Size: {r.quantity}</div>
 </div>
 ))}
 </div>
