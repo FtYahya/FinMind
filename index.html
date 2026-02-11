@@ -3,246 +3,297 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinMind Ultimate | Autonomous AI Trader</title>
+    <title>FinMind Ultimate | Autonomous Trader</title>
+    <!-- Charting Library -->
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <!-- Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --bg: #09090b; /* Zinc 950 */
-            --panel: #18181b; /* Zinc 900 */
-            --border: #27272a; /* Zinc 800 */
-            --accent: #3b82f6; /* Blue 500 */
-            --bull: #10b981; /* Emerald 500 */
-            --bear: #ef4444; /* Red 500 */
-            --text: #e4e4e7;
+            --bg-dark: #09090b;
+            --panel-dark: #18181b;
+            --border-color: #27272a;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
         }
+
+        * { box-sizing: border-box; }
 
         body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
+            padding: 0;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
             height: 100vh;
-            display: grid;
-            grid-template-rows: 50px 1fr;
-            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Prevent body scroll, handle in panels */
         }
 
-        /* --- Header --- */
+        /* --- HEADER --- */
         header {
-            background: var(--panel);
-            border-bottom: 1px solid var(--border);
+            height: 60px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--panel-dark);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 20px;
-            font-size: 0.9rem;
+            padding: 0 24px;
+            flex-shrink: 0;
         }
 
-        .logo {
-            font-weight: 800;
-            font-size: 1.1rem;
-            color: white;
+        .brand {
+            font-weight: 700;
+            font-size: 1.2rem;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            letter-spacing: -0.5px;
+        }
+        
+        .brand i { color: var(--accent-blue); }
+
+        .status-badge {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-green);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid rgba(16, 185, 129, 0.2);
         }
 
-        .logo i { color: var(--accent); }
-        .system-status { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; color: #71717a; }
-        .status-dot { width: 8px; height: 8px; background: var(--bull); border-radius: 50%; box-shadow: 0 0 8px var(--bull); }
-
-        /* --- Layout --- */
-        .main-grid {
+        /* --- MAIN LAYOUT (CSS GRID) --- */
+        .app-container {
             display: grid;
-            grid-template-columns: 280px 1fr 350px; /* Sidebar | Chart | AI Panel */
-            height: 100%;
+            grid-template-columns: 320px 1fr 400px; /* Fixed Sidebar, Flexible Chart, Fixed AI */
+            flex: 1;
             overflow: hidden;
+            position: relative;
         }
 
-        /* --- Sidebar (Controls) --- */
+        /* --- SIDEBAR --- */
         .sidebar {
-            background: var(--panel);
-            border-right: 1px solid var(--border);
-            padding: 20px;
+            background: var(--panel-dark);
+            border-right: 1px solid var(--border-color);
+            padding: 24px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 24px;
+            overflow-y: auto;
         }
 
-        .control-group { display: flex; flex-direction: column; gap: 8px; }
-        label { font-size: 0.75rem; color: #a1a1aa; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
         input, select {
             background: #27272a;
             border: 1px solid #3f3f46;
             color: white;
-            padding: 10px;
-            border-radius: 6px;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
             font-size: 0.9rem;
-            transition: 0.2s;
+            outline: none;
+            transition: border-color 0.2s;
         }
 
-        input:focus, select:focus { outline: none; border-color: var(--accent); }
+        input:focus, select:focus {
+            border-color: var(--accent-blue);
+        }
 
-        .btn-primary {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 6px;
+        .btn {
+            padding: 14px;
+            border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
-            transition: 0.2s;
+            border: none;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
+            font-size: 0.95rem;
         }
 
-        .btn-primary:hover { background: #2563eb; }
-
-        .scanner-box {
-            margin-top: auto;
-            background: #27272a;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #3f3f46;
+        .btn-primary {
+            background: var(--accent-blue);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
 
-        .btn-scanner {
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
             background: transparent;
-            border: 1px solid var(--accent);
-            color: var(--accent);
-            padding: 8px;
-            width: 100%;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            margin-top: 10px;
+            border: 1px solid var(--accent-blue);
+            color: var(--accent-blue);
+            margin-top: auto; /* Push to bottom */
         }
 
-        .btn-scanner:hover { background: rgba(59, 130, 246, 0.1); }
+        .btn-secondary:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
 
-        /* --- Chart Area --- */
-        .chart-area {
-            position: relative;
+        /* --- CHART SECTION --- */
+        .chart-section {
             background: #000;
+            position: relative;
             display: flex;
             flex-direction: column;
         }
 
-        #chart-container { flex: 1; width: 100%; }
-        
-        .chart-header {
+        .chart-info-overlay {
             position: absolute;
             top: 20px;
             left: 20px;
             z-index: 10;
+            pointer-events: none;
         }
 
-        .chart-symbol { font-size: 1.5rem; font-weight: 800; color: white; }
-        .chart-price { font-size: 1.1rem; color: var(--bull); font-weight: 600; }
+        .ticker-title { font-size: 2rem; font-weight: 800; color: #fff; margin: 0; }
+        .ticker-price { font-size: 1.5rem; font-family: 'JetBrains Mono', monospace; font-weight: 600; }
 
-        /* --- AI Panel --- */
+        #tv-chart {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* --- AI PANEL --- */
         .ai-panel {
-            background: var(--panel);
-            border-left: 1px solid var(--border);
+            background: var(--panel-dark);
+            border-left: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
         .ai-header {
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border);
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            color: var(--text-primary);
         }
 
         .ai-content {
-            flex: 1;
-            padding: 20px;
+            padding: 24px;
             overflow-y: auto;
-            font-size: 0.9rem;
+            flex: 1;
+            font-size: 0.95rem;
             line-height: 1.6;
         }
 
-        /* Generated AI Content Styling */
-        .ai-content h3 { color: var(--accent); margin-top: 0; font-size: 1.1rem; }
-        .ai-content strong { color: white; }
-        .ai-content ul { padding-left: 20px; color: #a1a1aa; }
-        .ai-content li { margin-bottom: 5px; }
-
-        /* Custom Verdict Boxes */
-        .verdict-box {
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 6px;
+        /* Formatted Output Styling */
+        .ai-output-box h3 { margin-top: 0; color: var(--accent-blue); font-size: 1.1rem; }
+        .ai-output-box ul { padding-left: 20px; color: var(--text-secondary); }
+        .ai-output-box li { margin-bottom: 8px; }
+        .ai-output-box strong { color: white; }
+        
+        .verdict-badge {
+            display: block;
             text-align: center;
-            font-weight: bold;
-            font-size: 1.2rem;
+            padding: 16px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 1.4rem;
+            margin-bottom: 24px;
+            border: 1px solid;
+            letter-spacing: 1px;
         }
-        .v-buy { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--bull); color: var(--bull); }
-        .v-sell { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--bear); color: var(--bear); }
-        .v-wait { background: rgba(255, 255, 255, 0.05); border: 1px solid #555; color: #aaa; }
+        
+        .v-buy { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-green); color: var(--accent-green); }
+        .v-sell { background: rgba(239, 68, 68, 0.1); border-color: var(--accent-red); color: var(--accent-red); }
+        .v-wait { background: rgba(255, 255, 255, 0.05); border-color: #555; color: #aaa; }
 
-        /* --- Loading States --- */
-        .overlay {
+        /* --- LOADING OVERLAY --- */
+        .loading-overlay {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(9, 9, 11, 0.9);
+            background: rgba(9, 9, 11, 0.85);
+            backdrop-filter: blur(4px);
             z-index: 50;
             display: none;
-            justify-content: center;
-            align-items: center;
             flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
-        .loader-ring {
+        .spinner {
             width: 40px;
             height: 40px;
-            border: 3px solid #3f3f46;
-            border-top-color: var(--accent);
+            border: 3px solid rgba(255,255,255,0.1);
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            border-top-color: var(--accent-blue);
+            animation: spin 1s ease-in-out infinite;
         }
 
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Mobile Responsive */
+        /* --- RESPONSIVE MOBILE FIX --- */
         @media (max-width: 1024px) {
-            .main-grid { grid-template-columns: 1fr; grid-template-rows: auto 400px auto; overflow-y: auto; }
-            .sidebar { grid-row: 1; border-right: none; border-bottom: 1px solid var(--border); }
-            .chart-area { grid-row: 2; height: 400px; }
-            .ai-panel { grid-row: 3; border-left: none; border-top: 1px solid var(--border); min-height: 400px; }
-            body { display: block; height: auto; }
+            body { overflow: auto; height: auto; }
+            .app-container {
+                display: flex;
+                flex-direction: column;
+                height: auto;
+                overflow: visible;
+            }
+            .sidebar { border-right: none; border-bottom: 1px solid var(--border-color); height: auto; }
+            .chart-section { height: 400px; min-height: 400px; }
+            .ai-panel { border-left: none; border-top: 1px solid var(--border-color); min-height: 500px; }
         }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo">
-            <i class="fas fa-brain"></i> FINMIND ULTIMATE
+        <div class="brand">
+            <i class="fas fa-brain"></i>
+            FINMIND ULTIMATE
         </div>
-        <div class="system-status">
-            AI ENGINE: ONLINE <div class="status-dot"></div>
+        <div class="status-badge">
+            <i class="fas fa-satellite-dish"></i> SYSTEM LIVE
         </div>
     </header>
 
-    <div class="main-grid">
+    <div class="app-container">
         
-        <!-- SIDEBAR -->
+        <!-- SIDEBAR CONTROLS -->
         <div class="sidebar">
-            <div class="control-group">
+            <div class="input-group">
                 <label>Stock Symbol</label>
-                <input type="text" id="ticker" value="RELIANCE.NS" placeholder="e.g. RELIANCE.NS, TSLA">
-                <small style="font-size: 0.7rem; color: #71717a;">*Use .NS for Indian Stocks</small>
+                <!-- Default set to AAPL because Finnhub free tier guarantees US data -->
+                <input type="text" id="ticker" value="AAPL" placeholder="e.g. AAPL, TSLA, RELIANCE.NS">
+                <small style="color: #666; font-size: 0.7rem;">
+                    *Try <strong>AAPL</strong> first. For India use <strong>.NS</strong>
+                </small>
             </div>
 
-            <div class="control-group">
+            <div class="input-group">
                 <label>Strategy Mode</label>
                 <select id="mode">
                     <option value="INTRADAY">⚡ Intraday (Day Trading)</option>
@@ -250,236 +301,269 @@
                 </select>
             </div>
 
-            <button class="btn-primary" onclick="runFullAnalysis()">
-                <i class="fas fa-search-dollar"></i> Analyze Asset
+            <button class="btn btn-primary" onclick="startAnalysis()">
+                <i class="fas fa-bolt"></i> RUN ANALYSIS
             </button>
 
-            <!-- Scanner Section -->
-            <div class="scanner-box">
-                <label style="color: white;">Daily Picks Scanner</label>
-                <p style="font-size: 0.75rem; color: #a1a1aa; margin: 5px 0;">
-                    AI scans top 10 market headlines to find today's hot movers.
-                </p>
-                <button class="btn-scanner" onclick="scanDailyPicks()">
-                    <i class="fas fa-radar"></i> Scan Opportunities
+            <div style="margin-top: auto;">
+                <label style="margin-bottom: 8px; display: block;">Market Scanner</label>
+                <button class="btn btn-secondary" onclick="runScanner()">
+                    <i class="fas fa-globe"></i> SCAN GLOBAL NEWS
                 </button>
             </div>
         </div>
 
         <!-- CHART AREA -->
-        <div class="chart-area">
-            <div class="overlay" id="chart-loader">
-                <div class="loader-ring"></div>
-                <div style="margin-top: 15px; font-size: 0.9rem; color: var(--accent);">Fetching Market Data...</div>
+        <div class="chart-section">
+            <div class="loading-overlay" id="chart-loader">
+                <div class="spinner"></div>
+                <div style="margin-top: 15px; color: var(--accent-blue); font-weight: 500;">Fetching Graph...</div>
             </div>
             
-            <div class="chart-header">
-                <div class="chart-symbol" id="display-symbol">--</div>
-                <div class="chart-price" id="display-price">--</div>
+            <div class="chart-info-overlay">
+                <h1 class="ticker-title" id="display-ticker">--</h1>
+                <div class="ticker-price" id="display-price">--</div>
             </div>
-            <div id="chart-container"></div>
+            
+            <div id="tv-chart"></div>
         </div>
 
         <!-- AI PANEL -->
         <div class="ai-panel">
             <div class="ai-header">
-                <i class="fas fa-robot" style="color: var(--accent);"></i> AI Analyst Verdict
+                <i class="fas fa-robot" style="color: var(--accent-blue);"></i>
+                AI ANALYST REPORT
             </div>
             
-            <div class="ai-content" id="ai-output">
-                <div style="text-align: center; color: #52525b; margin-top: 50px;">
-                    <i class="fas fa-wave-square" style="font-size: 2rem; margin-bottom: 10px;"></i>
-                    <p>Ready to analyze.<br>Enter a stock or use the Scanner.</p>
-                </div>
+            <div class="loading-overlay" id="ai-loader">
+                <div class="spinner" style="border-top-color: var(--accent-green);"></div>
+                <div style="margin-top: 15px; color: var(--accent-green); font-weight: 500;">AI Thinking...</div>
             </div>
 
-            <div class="overlay" id="ai-loader">
-                <div class="loader-ring"></div>
-                <div style="margin-top: 15px; font-size: 0.9rem; color: var(--accent);">AI Thinking & Calculating...</div>
+            <div class="ai-content" id="ai-output">
+                <div style="text-align: center; color: #52525b; margin-top: 80px;">
+                    <i class="fas fa-search-dollar" style="font-size: 2.5rem; margin-bottom: 16px;"></i>
+                    <p>Enter a symbol and click <strong>Run Analysis</strong>.<br>I will read the news and chart for you.</p>
+                </div>
             </div>
         </div>
 
     </div>
 
+    <!-- MAIN LOGIC SCRIPT -->
     <script type="module">
         import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-        // ==========================================
-        // 🔑 API KEYS (LIVE)
-        // ==========================================
-        const GEMINI_KEY = "AIzaSyCpkdU-h2IUs9OuzvuA0rN7lPSO_EyBZQs";
-        const FINNHUB_KEY = "d65sgn9r01qiish0u6ugd65sgn9r01qiish0u6v0";
-        // ==========================================
+        // --- CREDENTIALS (Hardcoded for testing as requested) ---
+        const KEYS = {
+            GEMINI: "AIzaSyCpkdU-h2IUs9OuzvuA0rN7lPSO_EyBZQs",
+            FINNHUB: "d65sgn9r01qiish0u6ugd65sgn9r01qiish0u6v0"
+        };
 
-        // --- Chart Setup ---
-        const chartContainer = document.getElementById('chart-container');
-        const chart = LightweightCharts.createChart(chartContainer, {
-            layout: { background: { color: '#000000' }, textColor: '#d1d4dc' },
-            grid: { vertLines: { color: '#18181b' }, horzLines: { color: '#18181b' } },
+        // --- CHART INITIALIZATION ---
+        const chartElement = document.getElementById('tv-chart');
+        const chart = LightweightCharts.createChart(chartElement, {
+            layout: { background: { color: '#000000' }, textColor: '#A1A1AA' },
+            grid: { vertLines: { color: '#18181B' }, horzLines: { color: '#18181B' } },
             crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-            timeScale: { borderColor: '#27272a' },
-            rightPriceScale: { borderColor: '#27272a' },
+            rightPriceScale: { borderColor: '#27272A' },
+            timeScale: { borderColor: '#27272A', timeVisible: true },
         });
 
         const candleSeries = chart.addCandlestickSeries({
-            upColor: '#10b981', downColor: '#ef4444',
-            borderVisible: false, wickUpColor: '#10b981', wickDownColor: '#ef4444',
+            upColor: '#10B981', downColor: '#EF4444',
+            borderVisible: false, wickUpColor: '#10B981', wickDownColor: '#EF4444'
         });
 
-        // Resize Chart logic
-        new ResizeObserver(entries => {
-            if (entries.length === 0 || entries[0].target !== chartContainer) return;
+        // Responsive Chart Resize
+        const resizeObserver = new ResizeObserver(entries => {
+            if (entries.length === 0 || entries[0].target !== chartElement) return;
             const newRect = entries[0].contentRect;
             chart.applyOptions({ height: newRect.height, width: newRect.width });
-        }).observe(chartContainer);
+        });
+        resizeObserver.observe(chartElement);
 
-        // --- Helper: Calculate RSI ---
-        function calculateRSI(data, period = 14) {
-            if (data.length < period) return 50;
-            let changes = [];
-            for(let i=1; i<data.length; i++) changes.push(data[i] - data[i-1]);
+        // --- HELPER: MATHS ---
+        function calculateRSI(prices, period = 14) {
+            if (prices.length < period + 1) return 50; 
+            let gains = 0, losses = 0;
             
-            let gains = changes.map(x => x > 0 ? x : 0);
-            let losses = changes.map(x => x < 0 ? Math.abs(x) : 0);
+            for(let i=1; i<=period; i++) {
+                let diff = prices[i] - prices[i-1];
+                if(diff > 0) gains += diff; else losses -= diff;
+            }
             
-            // Simple averaging
-            let avgGain = gains.slice(-period).reduce((a,b)=>a+b) / period;
-            let avgLoss = losses.slice(-period).reduce((a,b)=>a+b) / period;
+            let avgGain = gains / period;
+            let avgLoss = losses / period;
+            
+            // Smoothing
+            for(let i=period+1; i<prices.length; i++) {
+                let diff = prices[i] - prices[i-1];
+                if(diff > 0) {
+                    avgGain = (avgGain * (period-1) + diff) / period;
+                    avgLoss = (avgLoss * (period-1)) / period;
+                } else {
+                    avgGain = (avgGain * (period-1)) / period;
+                    avgLoss = (avgLoss * (period-1) - diff) / period;
+                }
+            }
             
             if(avgLoss === 0) return 100;
             let rs = avgGain / avgLoss;
             return 100 - (100 / (1 + rs));
         }
 
-        function showError(msg) {
-             document.getElementById('ai-output').innerHTML = `<div style="color:red; padding:10px; border:1px solid red; border-radius:5px;">Error: ${msg}</div>`;
-        }
-
-        // --- MAIN ANALYSIS FUNCTION ---
-        window.runFullAnalysis = async function() {
-            const ticker = document.getElementById('ticker').value.toUpperCase();
+        // --- CORE FUNCTION: ANALYSIS ---
+        window.startAnalysis = async function() {
+            const ticker = document.getElementById('ticker').value.toUpperCase().trim();
             const mode = document.getElementById('mode').value;
-            
-            if(!ticker) { showError("Please enter a stock symbol!"); return; }
+            const displayTicker = document.getElementById('display-ticker');
+            const displayPrice = document.getElementById('display-price');
+            const aiOutput = document.getElementById('ai-output');
 
-            // UI Loading
+            if (!ticker) return alert("Please enter a ticker!");
+
+            // 1. Reset UI
             document.getElementById('chart-loader').style.display = 'flex';
             document.getElementById('ai-loader').style.display = 'flex';
-            document.getElementById('ai-output').innerHTML = ''; // Clear previous output
+            aiOutput.innerHTML = ''; 
+            displayTicker.innerText = ticker;
+            displayPrice.innerText = "--";
 
             try {
-                // 1. Data Fetching
-                // Resolution: 'D' for Long Term, '60' (1 Hour) for Intraday
-                const resolution = mode === 'INTRADAY' ? '60' : 'D';
+                // 2. Fetch Candle Data (Graph)
+                // Use 'D' (Daily) for consistency on free tier, '60' often blocked for international
+                const resolution = 'D'; 
                 const now = Math.floor(Date.now() / 1000);
-                const past = now - (200 * 24 * 60 * 60); // 200 days back
-                
-                // Fetch Candles
-                const candleRes = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${ticker}&resolution=${resolution}&from=${past}&to=${now}&token=${FINNHUB_KEY}`);
+                const past = now - (200 * 24 * 60 * 60); // 200 days
+
+                const candleUrl = `https://finnhub.io/api/v1/stock/candle?symbol=${ticker}&resolution=${resolution}&from=${past}&to=${now}&token=${KEYS.FINNHUB}`;
+                const candleRes = await fetch(candleUrl);
                 const candleData = await candleRes.json();
+
+                let chartData = [];
+                let currentPrice = 0;
+                let trend = "NEUTRAL";
+                let rsi = 50;
+
+                // Handle Finnhub "No Data" gracefully
+                if (candleData.s === 'ok') {
+                     chartData = candleData.t.map((t, i) => ({
+                        time: t, open: candleData.o[i], high: candleData.h[i], low: candleData.l[i], close: candleData.c[i]
+                    }));
+                    
+                    candleSeries.setData(chartData);
+                    
+                    // Update Prices & Indicators
+                    const closes = candleData.c;
+                    currentPrice = closes[closes.length - 1];
+                    displayPrice.innerText = currentPrice.toFixed(2);
+                    displayPrice.style.color = currentPrice >= closes[closes.length-2] ? '#10B981' : '#EF4444';
+                    
+                    rsi = calculateRSI(closes);
+                    const sma50 = closes.slice(-50).reduce((a,b)=>a+b,0) / 50;
+                    trend = currentPrice > sma50 ? "BULLISH (Above 50MA)" : "BEARISH (Below 50MA)";
+                    
+                } else {
+                    // Fallback if Graph fails (common for Indian stocks on free tier)
+                    displayPrice.innerText = "Graph Unavailable";
+                    displayPrice.style.fontSize = "1rem";
+                    displayPrice.style.color = "#a1a1aa";
+                    aiOutput.innerHTML += `<div style="padding:10px; border:1px solid #333; margin-bottom:10px; color:#aaa; font-size:0.8rem;">⚠️ Note: Live Graph data for ${ticker} is restricted on the free tier. AI will analyze based on News only.</div>`;
+                }
                 
-                if(candleData.s === 'no_data') throw new Error("Stock data not found. If this is an Indian stock, did you forget .NS?");
+                document.getElementById('chart-loader').style.display = 'none';
 
-                // Process Chart Data
-                const chartData = candleData.t.map((t, i) => ({
-                    time: t, open: candleData.o[i], high: candleData.h[i], low: candleData.l[i], close: candleData.c[i]
-                }));
-                
-                candleSeries.setData(chartData);
-                document.getElementById('chart-loader').style.display = 'none'; // Chart Ready
-
-                // Update Header
-                const lastPrice = chartData[chartData.length-1].close;
-                document.getElementById('display-symbol').innerText = ticker;
-                document.getElementById('display-price').innerText = lastPrice.toFixed(2);
-                document.getElementById('display-price').style.color = lastPrice > chartData[chartData.length-2].close ? 'var(--bull)' : 'var(--bear)';
-
-                // 2. Technical Calcs
-                const closes = candleData.c;
-                const rsi = calculateRSI(closes);
-                const sma50 = closes.slice(-50).reduce((a,b)=>a+b,0) / 50;
-                const trend = lastPrice > sma50 ? "BULLISH" : "BEARISH";
-
-                // 3. News Fetching
-                const newsRes = await fetch(`https://finnhub.io/api/v1/company-news?symbol=${ticker}&from=${new Date(past*1000).toISOString().split('T')[0]}&to=${new Date().toISOString().split('T')[0]}&token=${FINNHUB_KEY}`);
+                // 3. Fetch News (Fundamental)
+                const newsUrl = `https://finnhub.io/api/v1/company-news?symbol=${ticker}&from=${new Date(past*1000).toISOString().split('T')[0]}&to=${new Date().toISOString().split('T')[0]}&token=${KEYS.FINNHUB}`;
+                const newsRes = await fetch(newsUrl);
                 const newsJson = await newsRes.json();
-                const news = newsJson.slice(0, 5).map(n => `- ${n.headline}`).join('\n');
+                
+                // Get top 5 headlines or fallback
+                let newsText = "No specific news found in the last 7 days.";
+                if(newsJson && newsJson.length > 0) {
+                    newsText = newsJson.slice(0, 5).map(n => `- ${n.headline}`).join('\n');
+                }
 
-                // 4. AI Prompting
+                // 4. Generate AI Prompt
                 const prompt = `
-                    You are a Senior Hedge Fund Trader. Provide a ruthless analysis of ${ticker} for a ${mode} strategy.
+                    Act as a Wall Street Quant. Analyze ${ticker}.
                     
-                    TECHNICALS:
-                    - Price: ${lastPrice}
-                    - RSI(14): ${rsi.toFixed(2)} (Over 70=Overbought, Under 30=Oversold)
-                    - Trend (vs 50MA): ${trend}
+                    DATA:
+                    - Price: ${currentPrice || "Unknown"}
+                    - RSI: ${rsi.toFixed(1)}
+                    - Trend: ${trend}
+                    - Strategy: ${mode}
                     
-                    LATEST NEWS:
-                    ${news}
-
+                    NEWS:
+                    ${newsText}
+                    
                     TASK:
-                    1. VERDICT: Start with a big bold verdict: BUY, SELL, or WAIT.
-                    2. INTRADAY PLAN (if Intraday): Specific Entry Price and Stop Loss targets.
-                    3. ANALYSIS: Explain the conflict or agreement between News and Chart.
+                    1. VERDICT: "BUY", "SELL", or "WAIT".
+                    2. REASONING: Explain why in 2-3 bullet points.
+                    3. ENTRY/EXIT: If ${mode} is INTRADAY, suggest price levels.
                     
-                    OUTPUT FORMAT: Use HTML. For the verdict, use <div class="verdict-box v-buy"> (or v-sell/v-wait).
+                    FORMAT: Use HTML.
+                    - Wrap verdict in <div class="verdict-badge v-buy"> (or v-sell/v-wait).
+                    - Use <div class="ai-output-box"> for the rest.
                 `;
 
-                const genAI = new GoogleGenerativeAI(GEMINI_KEY);
+                const genAI = new GoogleGenerativeAI(KEYS.GEMINI);
                 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                
                 const result = await model.generateContent(prompt);
                 const response = await result.response;
                 
-                document.getElementById('ai-output').innerHTML = response.text();
+                // Append AI result
+                aiOutput.innerHTML += response.text();
 
             } catch (err) {
-                showError(err.message);
+                console.error(err);
+                aiOutput.innerHTML = `<div style="color: #ef4444; padding: 20px; border: 1px solid #ef4444; border-radius: 8px;">
+                    <strong>System Error:</strong> ${err.message}<br><br>
+                    Possible fixes:<br>
+                    1. Check if Ticker is correct (e.g. RELIANCE.NS)<br>
+                    2. API limit reached (Try again in 1 minute)
+                </div>`;
                 document.getElementById('chart-loader').style.display = 'none';
             } finally {
                 document.getElementById('ai-loader').style.display = 'none';
             }
         };
 
-        // --- SCANNER FUNCTION ---
-        window.scanDailyPicks = async function() {
-            const aiPanel = document.getElementById('ai-output');
-            const aiLoader = document.getElementById('ai-loader');
+        // --- CORE FUNCTION: SCANNER ---
+        window.runScanner = async function() {
+            const aiOutput = document.getElementById('ai-output');
+            const loader = document.getElementById('ai-loader');
             
-            aiLoader.style.display = 'flex';
-            aiPanel.innerHTML = '';
+            aiOutput.innerHTML = '';
+            loader.style.display = 'flex';
             
             try {
                 // Fetch General Market News
-                const res = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_KEY}`);
+                const res = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${KEYS.FINNHUB}`);
                 const data = await res.json();
-                const headlines = data.slice(0, 15).map(n => n.headline).join('. ');
-
+                const headlines = data.slice(0, 10).map(n => n.headline).join('. ');
+                
                 const prompt = `
-                    Scan these global market headlines:
-                    "${headlines}"
-
-                    TASK:
-                    Identify 3 Hot Stocks or Sectors for today.
-                    For each, provide:
-                    1. Name/Ticker
-                    2. Bullish or Bearish?
-                    3. One sentence reasoning.
-
-                    Format as a clean HTML list with <h3>Daily Picks</h3> at the top.
+                    Scan these market headlines: "${headlines}"
+                    
+                    Identify 3 trading opportunities for today.
+                    Format as HTML list. Use <h3>Global Market Scan</h3> as title.
                 `;
-
-                const genAI = new GoogleGenerativeAI(GEMINI_KEY);
+                
+                const genAI = new GoogleGenerativeAI(KEYS.GEMINI);
                 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
                 const result = await model.generateContent(prompt);
                 
-                aiPanel.innerHTML = (await result.response).text();
-
+                aiOutput.innerHTML = `<div class="ai-output-box">${(await result.response).text()}</div>`;
+                
             } catch (err) {
-                showError("Scanner Error: " + err.message);
+                aiOutput.innerText = "Scanner failed: " + err.message;
             } finally {
-                aiLoader.style.display = 'none';
+                loader.style.display = 'none';
             }
-        };
+        }
     </script>
 </body>
 </html>
