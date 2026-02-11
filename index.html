@@ -10,16 +10,15 @@
     <!-- Libraries -->
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- San Francisco Font (Apple Native Look) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
 
     <style>
         :root {
             --bg: #000000;
-            --card: #1c1c1e; /* Apple Dark Gray */
-            --accent: #0A84FF; /* Apple System Blue */
-            --green: #30D158; /* Apple System Green */
-            --red: #FF453A; /* Apple System Red */
+            --card: #1c1c1e;
+            --accent: #0A84FF;
+            --green: #30D158;
+            --red: #FF453A;
             --text: #FFFFFF;
             --text-sec: #8E8E93;
             --border: #38383A;
@@ -34,14 +33,14 @@
             background-color: var(--bg);
             color: var(--text);
             font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
-            height: 100vh; /* Fallback */
-            height: 100dvh; /* iOS Dynamic Height */
+            height: 100vh;
+            height: 100dvh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
         }
 
-        /* --- TOP HEADER --- */
+        /* --- HEADER --- */
         header {
             padding-top: max(10px, var(--safe-top));
             padding-bottom: 10px;
@@ -61,7 +60,7 @@
         .brand span { color: var(--accent); }
         .live-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; box-shadow: 0 0 10px var(--green); }
 
-        /* --- MAIN CONTENT AREA --- */
+        /* --- CONTENT --- */
         main {
             flex: 1;
             overflow: hidden;
@@ -69,15 +68,14 @@
             background: var(--bg);
         }
 
-        /* Views (Tabs) */
         .view-section {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             padding: 20px;
-            padding-bottom: 100px; /* Space for bottom nav */
-            display: none; /* Hidden by default */
+            padding-bottom: 100px;
+            display: none;
             opacity: 0;
             transition: opacity 0.2s ease;
         }
@@ -87,7 +85,7 @@
             opacity: 1;
         }
 
-        /* --- INPUT VIEW (Trade) --- */
+        /* --- INPUTS --- */
         .input-card {
             background: var(--card);
             border-radius: 16px;
@@ -104,17 +102,16 @@
             display: block;
         }
 
-        /* 16px font size prevents iOS Zoom */
         input, select {
             width: 100%;
             background: #2C2C2E;
             border: none;
             color: white;
             padding: 14px;
-            font-size: 16px; 
+            font-size: 16px;
             border-radius: 10px;
             margin-bottom: 20px;
-            appearance: none;
+            appearance: none; /* Remove default styling */
         }
 
         input:focus { outline: 2px solid var(--accent); }
@@ -130,9 +127,10 @@
             border: none;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(10, 132, 255, 0.3);
+            transition: transform 0.1s;
         }
         
-        .btn-main:active { transform: scale(0.98); }
+        .btn-main:active { transform: scale(0.96); opacity: 0.8; }
 
         .btn-scan {
             background: transparent;
@@ -141,7 +139,7 @@
             margin-top: 15px;
         }
 
-        /* --- CHART VIEW --- */
+        /* --- CHART --- */
         #chart-view { padding: 0; display: flex; flex-direction: column; }
         
         .chart-header-overlay {
@@ -150,12 +148,12 @@
             z-index: 10;
             pointer-events: none;
         }
-        .symbol-title { font-size: 28px; font-weight: 800; margin: 0; }
-        .price-display { font-size: 20px; font-weight: 500; font-family: 'Inter', monospace; }
+        .symbol-title { font-size: 28px; font-weight: 800; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .price-display { font-size: 20px; font-weight: 500; font-family: 'Inter', monospace; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 
         #chart-container { width: 100%; height: 100%; background: black; }
 
-        /* --- AI VIEW --- */
+        /* --- REPORT --- */
         .verdict-banner {
             padding: 20px;
             border-radius: 12px;
@@ -170,12 +168,12 @@
         .v-wait { background: rgba(255,255,255,0.1); color: #ccc; }
 
         .ai-text { font-size: 16px; line-height: 1.6; color: #E5E5EA; }
-        .ai-text h3 { color: var(--accent); margin-top: 25px; font-size: 18px; }
+        .ai-text h3 { color: var(--accent); margin-top: 25px; font-size: 18px; border-bottom: 1px solid #333; padding-bottom: 5px; }
         .ai-text ul { padding-left: 20px; color: var(--text-sec); }
         .ai-text li { margin-bottom: 10px; }
         .ai-text strong { color: white; }
 
-        /* --- BOTTOM NAV BAR (iOS Style) --- */
+        /* --- TAB BAR --- */
         .tab-bar {
             background: rgba(28, 28, 30, 0.9);
             backdrop-filter: blur(20px);
@@ -202,11 +200,10 @@
         }
 
         .tab-btn i { font-size: 20px; transition: 0.2s; }
-        
         .tab-btn.active { color: var(--accent); }
         .tab-btn.active i { transform: translateY(-2px); }
 
-        /* --- LOADING STATES --- */
+        /* --- MODAL --- */
         .loader-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8);
@@ -227,9 +224,11 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Desktop Support (Just in case) */
-        @media (min-width: 1024px) {
-            body { max-width: 500px; margin: 0 auto; border-left: 1px solid #333; border-right: 1px solid #333; }
+        .toast {
+            position: fixed; top: 50px; left: 50%; transform: translateX(-50%);
+            background: var(--green); color: black; padding: 10px 20px;
+            border-radius: 20px; font-weight: 600; font-size: 14px;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 300;
         }
     </style>
 </head>
@@ -239,6 +238,8 @@
         <div class="brand"><i class="fas fa-brain"></i> FinMind<span>iOS</span></div>
         <div class="live-dot"></div>
     </header>
+
+    <div class="toast" id="toast">System Online</div>
 
     <main>
         <!-- VIEW 1: TRADE INPUT -->
@@ -288,15 +289,15 @@
 
     <!-- BOTTOM NAV -->
     <nav class="tab-bar">
-        <button class="tab-btn active" onclick="switchTab('trade')">
+        <button class="tab-btn active" onclick="switchTab('trade', event)">
             <i class="fas fa-sliders-h"></i>
             <span>Trade</span>
         </button>
-        <button class="tab-btn" onclick="switchTab('chart')">
+        <button class="tab-btn" onclick="switchTab('chart', event)">
             <i class="fas fa-chart-line"></i>
             <span>Chart</span>
         </button>
-        <button class="tab-btn" onclick="switchTab('report')">
+        <button class="tab-btn" onclick="switchTab('report', event)">
             <i class="fas fa-file-alt"></i>
             <span>Report</span>
         </button>
@@ -311,96 +312,103 @@
     <script type="module">
         import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-        // KEYS
+        // CONFIG
         const KEYS = {
             GEMINI: "AIzaSyCpkdU-h2IUs9OuzvuA0rN7lPSO_EyBZQs",
             FINNHUB: "d65sgn9r01qiish0u6ugd65sgn9r01qiish0u6v0"
         };
 
-        // --- CHART SETUP ---
+        // --- CHART INIT ---
         const chartEl = document.getElementById('chart-container');
-        const chart = LightweightCharts.createChart(chartEl, {
-            layout: { background: { color: '#000000' }, textColor: '#8E8E93' },
-            grid: { vertLines: { color: '#1C1C1E' }, horzLines: { color: '#1C1C1E' } },
-            crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-            rightPriceScale: { borderColor: '#2C2C2E', visible: true },
-            timeScale: { borderColor: '#2C2C2E', visible: true },
-            handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false }
-        });
+        let chart;
+        let candleSeries;
+        
+        try {
+            chart = LightweightCharts.createChart(chartEl, {
+                layout: { background: { color: '#000000' }, textColor: '#8E8E93' },
+                grid: { vertLines: { color: '#1C1C1E' }, horzLines: { color: '#1C1C1E' } },
+                crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+                rightPriceScale: { borderColor: '#2C2C2E', visible: true },
+                timeScale: { borderColor: '#2C2C2E', visible: true },
+                handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false }
+            });
 
-        const candleSeries = chart.addCandlestickSeries({
-            upColor: '#30D158', downColor: '#FF453A',
-            borderVisible: false, wickUpColor: '#30D158', wickDownColor: '#FF453A'
-        });
+            candleSeries = chart.addCandlestickSeries({
+                upColor: '#30D158', downColor: '#FF453A',
+                borderVisible: false, wickUpColor: '#30D158', wickDownColor: '#FF453A'
+            });
 
-        // Resize Logic
-        new ResizeObserver(entries => {
-            if (entries.length === 0 || entries[0].target !== chartEl) return;
-            const newRect = entries[0].contentRect;
-            chart.applyOptions({ height: newRect.height, width: newRect.width });
-        }).observe(chartEl);
+            new ResizeObserver(entries => {
+                if (entries.length === 0 || entries[0].target !== chartEl) return;
+                const newRect = entries[0].contentRect;
+                chart.applyOptions({ height: newRect.height, width: newRect.width });
+            }).observe(chartEl);
+        } catch(e) { console.error("Chart Init Error", e); }
 
 
-        // --- UI NAVIGATION ---
-        window.switchTab = function(tabName) {
-            // Update Buttons
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            event.currentTarget.classList.add('active'); // Needs event passed or just logic based on name
-
-            // If called from JS (not click), manual update might be needed
-            if (!event.currentTarget.classList.contains('tab-btn')) {
-                 const btns = document.querySelectorAll('.tab-btn');
-                 btns[0].classList.toggle('active', tabName === 'trade');
-                 btns[1].classList.toggle('active', tabName === 'chart');
-                 btns[2].classList.toggle('active', tabName === 'report');
+        // --- UI UTILS ---
+        window.switchTab = function(tabName, event) {
+            // Button State
+            if(event) {
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                event.currentTarget.classList.add('active');
+            } else {
+                // Programmatic switch
+                const btns = document.querySelectorAll('.tab-btn');
+                btns.forEach(b => b.classList.remove('active'));
+                if(tabName === 'trade') btns[0].classList.add('active');
+                if(tabName === 'chart') btns[1].classList.add('active');
+                if(tabName === 'report') btns[2].classList.add('active');
             }
 
-            // Update Views
+            // View State
             document.querySelectorAll('.view-section').forEach(view => {
                 view.classList.remove('active');
             });
             document.getElementById(`view-${tabName}`).classList.add('active');
 
-            // Resize chart if switching to chart view
-            if (tabName === 'chart') {
+            if (tabName === 'chart' && chart) {
                 chart.timeScale().fitContent();
             }
         }
 
-
-        // --- LOGIC ---
+        // --- MAIN FUNCTIONS ---
+        // Attaching to window to ensure global scope access from HTML
         window.startAnalysis = async function() {
-            const ticker = document.getElementById('ticker').value.toUpperCase().trim();
+            const tickerInput = document.getElementById('ticker');
+            const ticker = tickerInput.value.toUpperCase().trim();
             const mode = document.getElementById('mode').value;
             const loader = document.getElementById('loader');
 
-            if (!ticker) return alert("Enter a symbol");
+            // Close keyboard
+            tickerInput.blur();
+
+            if (!ticker) return alert("Please enter a stock symbol");
 
             loader.style.display = 'flex';
             
             try {
-                // 1. Fetch Price (Quote)
+                // 1. Fetch Quote
                 const qRes = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${KEYS.FINNHUB}`);
                 const qData = await qRes.json();
                 
-                // If invalid
-                if (qData.c === 0 && qData.d === null) throw new Error("Invalid Symbol");
+                if (qData.c === 0 && qData.d === null) throw new Error("Invalid Symbol or No Data");
 
                 const price = qData.c;
                 const change = qData.d;
 
-                // Update Chart Header
+                // Update Chart Headers
                 document.getElementById('display-ticker').innerText = ticker;
                 const pEl = document.getElementById('display-price');
                 pEl.innerText = price.toFixed(2);
                 pEl.style.color = change >= 0 ? '#30D158' : '#FF453A';
 
-                // 2. Fetch Chart Data (Try/Catch for Fail Safe)
+                // 2. Fetch Candle Data
                 let rsi = 50;
                 let trend = "Neutral";
                 try {
                     const now = Math.floor(Date.now() / 1000);
-                    const past = now - (200 * 86400);
+                    const past = now - (200 * 86400); // 200 days
                     const cRes = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${ticker}&resolution=D&from=${past}&to=${now}&token=${KEYS.FINNHUB}`);
                     const cData = await cRes.json();
 
@@ -410,57 +418,47 @@
                         }));
                         candleSeries.setData(chartData);
                         
-                        // Technicals
                         const closes = cData.c;
-                        // RSI Calc
                         rsi = calculateRSI(closes);
-                        // Trend Calc
                         const sma50 = closes.slice(-50).reduce((a,b)=>a+b,0)/50;
                         trend = price > sma50 ? "Bullish (>50MA)" : "Bearish (<50MA)";
                     }
-                } catch (e) { console.warn("Chart data failed", e); }
+                } catch (e) { console.warn("Chart fetch error (likely free tier limit)", e); }
 
                 // 3. News
-                const nRes = await fetch(`https://finnhub.io/api/v1/company-news?symbol=${ticker}&from=${new Date(Date.now()-7*86400000).toISOString().split('T')[0]}&to=${new Date().toISOString().split('T')[0]}&token=${KEYS.FINNHUB}`);
-                const nData = await nRes.json();
-                const news = nData.slice(0, 5).map(n => `- ${n.headline}`).join('\n') || "No recent news.";
+                let news = "No recent specific news.";
+                try {
+                    const nRes = await fetch(`https://finnhub.io/api/v1/company-news?symbol=${ticker}&from=${new Date(Date.now()-7*86400000).toISOString().split('T')[0]}&to=${new Date().toISOString().split('T')[0]}&token=${KEYS.FINNHUB}`);
+                    const nData = await nRes.json();
+                    if(nData && nData.length > 0) {
+                        news = nData.slice(0, 5).map(n => `- ${n.headline}`).join('\n');
+                    }
+                } catch(e) { console.warn("News error"); }
 
                 // 4. AI
                 const genAI = new GoogleGenerativeAI(KEYS.GEMINI);
                 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
                 
                 const prompt = `
-                    Analyze ${ticker} for ${mode} strategy.
-                    Price: ${price}, RSI: ${rsi.toFixed(1)}, Trend: ${trend}.
+                    Act as an expert trader. Analyze ${ticker} (${mode}).
+                    Data: Price ${price}, RSI ${rsi.toFixed(1)}, Trend ${trend}.
                     News: ${news}
                     
-                    Task:
-                    1. Verdict: BUY, SELL, or WAIT.
-                    2. Reasoning: Concise bullets.
-                    3. Targets: Stop Loss / Target Price.
-                    
-                    Format HTML:
-                    <div class="verdict-banner v-buy">BUY</div> (Use v-sell/v-wait accordingly)
-                    <div class="ai-text">...content...</div>
+                    Required Output HTML:
+                    1. Verdict: <div class="verdict-banner v-buy">BUY</div> (or v-sell/v-wait)
+                    2. Analysis: <div class="ai-text">...bullet points...</div>
                 `;
 
                 const result = await model.generateContent(prompt);
-                const text = response = await result.response.text();
+                const text = await result.response.text(); // FIXED LINE
                 
                 document.getElementById('ai-content').innerHTML = text;
 
-                // Switch to Report Tab
-                // Manually trigger tab switch logic
-                document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
-                document.getElementById('view-report').classList.add('active');
-                
-                const btns = document.querySelectorAll('.tab-btn');
-                btns[0].classList.remove('active');
-                btns[1].classList.remove('active');
-                btns[2].classList.add('active');
+                // Auto-switch to Report
+                window.switchTab('report');
 
             } catch (err) {
-                alert("Error: " + err.message);
+                alert("System Error: " + err.message);
             } finally {
                 loader.style.display = 'none';
             }
@@ -476,24 +474,19 @@
 
                 const genAI = new GoogleGenerativeAI(KEYS.GEMINI);
                 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-                const result = await model.generateContent(`Scan global news: "${headlines}". Pick 3 volatile stocks/sectors for today. Format as HTML list <ul><li>...`);
+                const result = await model.generateContent(`Scan these headlines: "${headlines}". Pick 3 volatile stocks/sectors. Return as HTML list <ul><li>...`);
                 
-                document.getElementById('ai-content').innerHTML = `<h2 style="margin-bottom:20px;">Global Scanner</h2><div class="ai-text">${(await result.response).text()}</div>`;
+                const text = await result.response.text(); // FIXED LINE
+                document.getElementById('ai-content').innerHTML = `<h2 style="margin-bottom:20px;">Market Scan</h2><div class="ai-text">${text}</div>`;
                 
-                // Switch to Report
-                document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
-                document.getElementById('view-report').classList.add('active');
-                const btns = document.querySelectorAll('.tab-btn');
-                btns[0].classList.remove('active');
-                btns[1].classList.remove('active');
-                btns[2].classList.add('active');
+                window.switchTab('report');
 
             } catch(e) { alert(e.message); }
             finally { loader.style.display = 'none'; }
         }
 
         function calculateRSI(prices) {
-            if (prices.length < 15) return 50;
+            if (!prices || prices.length < 15) return 50;
             let gains = 0, losses = 0;
             for(let i=1; i<=14; i++) {
                 let d = prices[i] - prices[i-1];
@@ -507,6 +500,14 @@
             }
             return al===0 ? 100 : 100-(100/(1+(ag/al)));
         }
+
+        // System Ready Toast
+        setTimeout(() => {
+            const t = document.getElementById('toast');
+            t.style.opacity = '1';
+            setTimeout(() => t.style.opacity = '0', 2000);
+        }, 500);
+
     </script>
 </body>
 </html>
