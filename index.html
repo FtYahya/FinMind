@@ -12,21 +12,21 @@
 
 <style>
 body {
-background: linear-gradient(180deg,#0a0a0a,#000000);
+background: linear-gradient(180deg,#0f0f0f,#000000);
 color: white;
-font-family: -apple-system,BlinkMacSystemFont;
+font-family: -apple-system, BlinkMacSystemFont;
 }
 .glass {
 background: rgba(255,255,255,0.05);
-backdrop-filter: blur(20px);
-border: 1px solid rgba(255,255,255,0.1);
+backdrop-filter: blur(25px);
+border: 1px solid rgba(255,255,255,0.08);
 }
-.fade-in {
-animation: fade 0.5s ease-in-out;
+.fade {
+animation: fadeIn 0.4s ease-in-out;
 }
-@keyframes fade {
-from {opacity:0; transform: translateY(10px);}
-to {opacity:1; transform: translateY(0);}
+@keyframes fadeIn {
+from {opacity:0; transform:translateY(10px);}
+to {opacity:1; transform:translateY(0);}
 }
 </style>
 </head>
@@ -46,13 +46,14 @@ const [status,setStatus] = useState("IDLE");
 const [stocks,setStocks] = useState([]);
 const [error,setError] = useState("");
 const [cooldown,setCooldown] = useState(0);
+const [rawOutput,setRawOutput] = useState("");
 
 const controllerRef = useRef(null);
 
 useEffect(()=>{
 if(cooldown>0){
-const timer = setTimeout(()=>setCooldown(cooldown-1),1000);
-return ()=>clearTimeout(timer);
+const t = setTimeout(()=>setCooldown(cooldown-1),1000);
+return ()=>clearTimeout(t);
 }
 },[cooldown]);
 
@@ -79,6 +80,7 @@ if(cooldown>0) return;
 
 setError("");
 setStocks([]);
+setRawOutput("");
 setStatus("SCANNING");
 setCooldown(30);
 
@@ -104,7 +106,7 @@ Return STRICT JSON ONLY.
 ]
 }
 
-Scan NSE market now and return 5 strongest intraday breakout stocks.
+Scan NSE market right now and return exactly 5 strongest intraday breakout stocks.
 `;
 
 try{
@@ -125,17 +127,49 @@ tools:[{google_search:{}}]
 const data = await res.json();
 let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
-if(!text) throw new Error("Empty response");
+if(!text){
+setError("Empty AI response");
+setStatus("IDLE");
+return;
+}
 
-text = text.replace(/```json/g,"").replace(/```/g,"").trim();
-text = text.substring(text.indexOf("{"),text.lastIndexOf("}")+1);
+setRawOutput(text);
 
-const parsed = JSON.parse(text);
+// CLEAN MARKDOWN
+text = text.replace(/```json/gi,"").replace(/```/g,"").trim();
+
+// EXTRACT JSON BLOCK
+const match = text.match(/\{[\s\S]*\}/);
+
+if(!match){
+setError("AI returned non-JSON response");
+setStatus("IDLE");
+return;
+}
+
+let parsed;
+
+try {
+parsed = JSON.parse(match[0]);
+} catch(e){
+setError("AI JSON malformed");
+setStatus("IDLE");
+return;
+}
+
+if(!parsed.stocks || !Array.isArray(parsed.stocks)){
+setError("Invalid AI structure");
+setStatus("IDLE");
+return;
+}
 
 let valid = [];
 
 parsed.stocks.forEach(s=>{
+if(!s.name || !s.price || !s.target || !s.stopLoss) return;
+
 const confidence = computeConfidence(s);
+
 if(confidence>=70){
 valid.push({
 ...s,
@@ -145,13 +179,19 @@ quantity: positionSize(s.price,s.stopLoss)
 }
 });
 
+if(valid.length===0){
+setError("No high-confidence trades found");
+setStatus("IDLE");
+return;
+}
+
 valid.sort((a,b)=>b.confidence-a.confidence);
 
 setStocks(valid.slice(0,5));
 setStatus("IDLE");
 
 }catch(e){
-setError("AI response invalid or unstable");
+setError("System error");
 setStatus("ERROR");
 }
 
@@ -160,16 +200,16 @@ setStatus("ERROR");
 return(
 <div className="p-6 space-y-6 max-w-xl mx-auto">
 
-<h1 className="text-2xl font-semibold tracking-tight">
+<h1 className="text-2xl font-semibold">
 FinMind Sniper Pro
 </h1>
 
-<div className="glass p-4 rounded-2xl space-y-3">
+<div className="glass p-5 rounded-2xl space-y-4">
 
 <input
 type="password"
 placeholder="Gemini API Key"
-className="w-full bg-transparent outline-none"
+className="w-full bg-transparent outline-none text-sm"
 value={apiKey}
 onChange={e=>setApiKey(e.target.value)}
 />
@@ -177,7 +217,7 @@ onChange={e=>setApiKey(e.target.value)}
 <input
 type="number"
 placeholder="Capital"
-className="w-full bg-transparent outline-none"
+className="w-full bg-transparent outline-none text-sm"
 value={capital}
 onChange={e=>setCapital(Number(e.target.value))}
 />
@@ -193,13 +233,11 @@ className="w-full bg-orange-500 text-black font-semibold py-3 rounded-xl"
 </div>
 
 {error && (
-<div className="text-red-400 fade-in">{error}</div>
+<div className="text-red-400 fade">{error}</div>
 )}
 
-<div className="space-y-4">
-
 {stocks.map((s,i)=>(
-<div key={i} className="glass p-4 rounded-2xl fade-in space-y-1">
+<div key={i} className="glass p-4 rounded-2xl fade space-y-1">
 <div className="flex justify-between">
 <span className="font-semibold">{s.name}</span>
 <span className="text-orange-400">{s.confidence}%</span>
@@ -212,7 +250,13 @@ className="w-full bg-orange-500 text-black font-semibold py-3 rounded-xl"
 </div>
 ))}
 
+{rawOutput && (
+<div className="glass p-3 rounded-xl text-xs opacity-50">
+RAW AI OUTPUT (Debug):
+<br/>
+{rawOutput}
 </div>
+)}
 
 </div>
 );
