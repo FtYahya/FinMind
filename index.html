@@ -2,7 +2,8 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>FinMind Sniper – 5 Stock Quant Engine</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinMind Sniper Pro</title>
 
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -10,7 +11,23 @@
 <script src="https://cdn.tailwindcss.com"></script>
 
 <style>
-body { background:#000; color:#e5e7eb; font-family: monospace; }
+body {
+background: linear-gradient(180deg,#0a0a0a,#000000);
+color: white;
+font-family: -apple-system,BlinkMacSystemFont;
+}
+.glass {
+background: rgba(255,255,255,0.05);
+backdrop-filter: blur(20px);
+border: 1px solid rgba(255,255,255,0.1);
+}
+.fade-in {
+animation: fade 0.5s ease-in-out;
+}
+@keyframes fade {
+from {opacity:0; transform: translateY(10px);}
+to {opacity:1; transform: translateY(0);}
+}
 </style>
 </head>
 
@@ -19,35 +36,26 @@ body { background:#000; color:#e5e7eb; font-family: monospace; }
 
 <script type="text/babel">
 
-const { useState, useRef } = React;
+const { useState, useRef, useEffect } = React;
 
 function App(){
 
 const [apiKey,setApiKey] = useState("");
 const [capital,setCapital] = useState(100000);
 const [status,setStatus] = useState("IDLE");
-const [results,setResults] = useState([]);
+const [stocks,setStocks] = useState([]);
 const [error,setError] = useState("");
-const [cooldown,setCooldown] = useState(false);
+const [cooldown,setCooldown] = useState(0);
 
 const controllerRef = useRef(null);
 
-// MARKET HOURS CHECK
-function isMarketOpen(){
-const now = new Date();
-const day = now.getDay();
-if(day===0 || day===6) return false;
-
-const hour = now.getHours();
-const min = now.getMinutes();
-
-const open = (hour>9 || (hour===9 && min>=15));
-const close = (hour<15 || (hour===15 && min<=30));
-
-return open && close;
+useEffect(()=>{
+if(cooldown>0){
+const timer = setTimeout(()=>setCooldown(cooldown-1),1000);
+return ()=>clearTimeout(timer);
 }
+},[cooldown]);
 
-// CONFIDENCE ENGINE
 function computeConfidence(d){
 let score = 0;
 if(d.volumeSpike>150) score+=30;
@@ -57,30 +65,25 @@ if(d.newsRecent) score+=25;
 return score;
 }
 
-// POSITION SIZE
 function positionSize(entry,stop){
-const riskPerTrade = capital * 0.01;
+const risk = capital * 0.01;
 const diff = Math.abs(entry-stop);
 if(diff===0) return 0;
-return Math.floor(riskPerTrade/diff);
+return Math.floor(risk/diff);
 }
 
 async function scan(){
 
-setError("");
-setResults([]);
-
 if(!apiKey) return setError("Enter API Key");
-if(!isMarketOpen()) return setError("Market Closed");
-if(cooldown) return setError("Wait 30 seconds");
+if(cooldown>0) return;
 
-setCooldown(true);
-setTimeout(()=>setCooldown(false),30000);
+setError("");
+setStocks([]);
+setStatus("SCANNING");
+setCooldown(30);
 
 if(controllerRef.current) controllerRef.current.abort();
 controllerRef.current = new AbortController();
-
-setStatus("SCANNING");
 
 const prompt = `
 Return STRICT JSON ONLY.
@@ -101,10 +104,7 @@ Return STRICT JSON ONLY.
 ]
 }
 
-TASK:
-Scan NSE market RIGHT NOW.
-Return EXACTLY 5 stocks with strongest intraday breakout potential.
-Only include active high-volume stocks.
+Scan NSE market now and return 5 strongest intraday breakout stocks.
 `;
 
 try{
@@ -127,63 +127,49 @@ let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
 if(!text) throw new Error("Empty response");
 
-// CLEAN JSON
-text = text.replace(/```json/g,"")
-.replace(/```/g,"")
-.trim();
-
-const firstBrace = text.indexOf("{");
-const lastBrace = text.lastIndexOf("}");
-if(firstBrace===-1 || lastBrace===-1)
-throw new Error("Invalid AI format");
-
-text = text.substring(firstBrace,lastBrace+1);
+text = text.replace(/```json/g,"").replace(/```/g,"").trim();
+text = text.substring(text.indexOf("{"),text.lastIndexOf("}")+1);
 
 const parsed = JSON.parse(text);
 
-if(!parsed.stocks || parsed.stocks.length===0)
-throw new Error("No stocks returned");
+let valid = [];
 
-let finalStocks = [];
-
-parsed.stocks.forEach(stock=>{
-const confidence = computeConfidence(stock);
+parsed.stocks.forEach(s=>{
+const confidence = computeConfidence(s);
 if(confidence>=70){
-finalStocks.push({
-...stock,
+valid.push({
+...s,
 confidence,
-quantity: positionSize(stock.price,stock.stopLoss)
+quantity: positionSize(s.price,s.stopLoss)
 });
 }
 });
 
-if(finalStocks.length===0)
-throw new Error("No high-confidence trades found");
+valid.sort((a,b)=>b.confidence-a.confidence);
 
-// SORT BY CONFIDENCE
-finalStocks.sort((a,b)=>b.confidence-a.confidence);
-
-setResults(finalStocks.slice(0,5));
+setStocks(valid.slice(0,5));
 setStatus("IDLE");
 
 }catch(e){
-setError(e.message);
+setError("AI response invalid or unstable");
 setStatus("ERROR");
 }
 
 }
 
 return(
-<div className="p-6 space-y-4 max-w-2xl mx-auto">
+<div className="p-6 space-y-6 max-w-xl mx-auto">
 
-<h1 className="text-orange-500 text-xl font-bold">
-FinMind Sniper – 5 Stock Quant Engine
+<h1 className="text-2xl font-semibold tracking-tight">
+FinMind Sniper Pro
 </h1>
+
+<div className="glass p-4 rounded-2xl space-y-3">
 
 <input
 type="password"
 placeholder="Gemini API Key"
-className="bg-gray-900 p-3 w-full rounded"
+className="w-full bg-transparent outline-none"
 value={apiKey}
 onChange={e=>setApiKey(e.target.value)}
 />
@@ -191,39 +177,42 @@ onChange={e=>setApiKey(e.target.value)}
 <input
 type="number"
 placeholder="Capital"
-className="bg-gray-900 p-3 w-full rounded"
+className="w-full bg-transparent outline-none"
 value={capital}
 onChange={e=>setCapital(Number(e.target.value))}
 />
 
 <button
 onClick={scan}
-disabled={status==="SCANNING"}
-className="bg-orange-600 w-full p-3 rounded font-bold"
+disabled={status==="SCANNING" || cooldown>0}
+className="w-full bg-orange-500 text-black font-semibold py-3 rounded-xl"
 >
-{status==="SCANNING" ? "Scanning Market..." : "Scan NSE for 5 Trades"}
+{status==="SCANNING" ? "Scanning..." : cooldown>0 ? `Wait ${cooldown}s` : "Scan Market"}
 </button>
 
+</div>
+
 {error && (
-<div className="text-red-500 bg-gray-900 p-3 rounded">{error}</div>
+<div className="text-red-400 fade-in">{error}</div>
 )}
 
-{results.length>0 && (
 <div className="space-y-4">
-{results.map((r,i)=>(
-<div key={i} className="bg-gray-900 p-4 rounded text-sm space-y-1">
-<div className="text-orange-500 font-bold">
-#{i+1} {r.name} ({r.confidence}%)
+
+{stocks.map((s,i)=>(
+<div key={i} className="glass p-4 rounded-2xl fade-in space-y-1">
+<div className="flex justify-between">
+<span className="font-semibold">{s.name}</span>
+<span className="text-orange-400">{s.confidence}%</span>
 </div>
-<div>Price: {r.price}</div>
-<div>Action: {r.action}</div>
-<div>Target: {r.target}</div>
-<div>Stop: {r.stopLoss}</div>
-<div>Position Size: {r.quantity}</div>
+<div>Price: {s.price}</div>
+<div>Action: {s.action}</div>
+<div>Target: {s.target}</div>
+<div>Stop: {s.stopLoss}</div>
+<div>Qty: {s.quantity}</div>
 </div>
 ))}
+
 </div>
-)}
 
 </div>
 );
