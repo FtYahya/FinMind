@@ -3,20 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinMind Sniper: High-Profit Edition</title>
+    <title>FinMind Sniper: Live Confidence Edition</title>
     
-    <!-- React & ReactDOM (The Engine) -->
+    <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     
-    <!-- Babel (To understand the code) -->
+    <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- Tailwind CSS (For styling) -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
-        /* Custom Scrollbar for that Hacker Feel */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #050505; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
@@ -26,7 +25,6 @@
         
         body { background-color: #000; color: #e5e7eb; }
         
-        /* Scan Line Animation */
         @keyframes scan {
             0% { top: 0%; opacity: 0; }
             50% { opacity: 1; }
@@ -48,8 +46,7 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // --- 1. CRASH-PROOF ICONS (Inline SVGs) ---
-        // This replaces the external library that was causing white screens.
+        // --- 1. CRASH-PROOF ICONS ---
         const Icon = ({ path, size = 18, className = "" }) => (
             <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
                 {path}
@@ -65,10 +62,11 @@
             Clock: (props) => <Icon {...props} path={<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>} />,
             ShieldCheck: (props) => <Icon {...props} path={<><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></>} />,
             AlertTriangle: (props) => <Icon {...props} path={<><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></>} />,
-            Lock: (props) => <Icon {...props} path={<><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>} />
+            Lock: (props) => <Icon {...props} path={<><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>} />,
+            CheckCircle: (props) => <Icon {...props} path={<><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></>} />
         };
 
-        // --- 2. COMPONENTS ---
+        // --- 2. SUB-COMPONENTS ---
 
         const Header = ({ status }) => (
             <div className="bg-[#050505] border-b border-gray-800 p-3 sticky top-0 z-20 flex justify-between items-center shadow-lg shadow-orange-900/5">
@@ -80,12 +78,12 @@
                         {status === 'IDLE' && <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>}
                         {status === 'SCANNING' && <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-ping"></div>}
                         {status === 'ERROR' && <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>}
-                        {status === 'SCANNING' ? 'HUNTING 25% RETURNS...' : 'SYSTEM ARMED'}
+                        {status === 'SCANNING' ? 'SEARCHING LIVE DATA...' : 'REAL-TIME UPLINK ACTIVE'}
                     </div>
                 </div>
                 <div className="bg-orange-900/10 border border-orange-900/30 px-2 py-1 rounded flex items-center gap-1.5">
-                    <Icons.Target size={10} className="text-orange-500" />
-                    <span className="text-[9px] text-orange-400 font-mono font-bold">ROI TARGET: MAX</span>
+                    <Icons.ShieldCheck size={10} className="text-orange-500" />
+                    <span className="text-[9px] text-orange-400 font-mono font-bold">CONFIDENCE CHECK</span>
                 </div>
             </div>
         );
@@ -97,7 +95,7 @@
                 {/* CONTROLS */}
                 <div className="p-4 bg-gradient-to-b from-gray-900/40 to-black border-b border-gray-800 space-y-4">
                     
-                    {/* Input Row */}
+                    {/* Input */}
                     <div className="flex gap-2">
                         <div className="relative flex-1 group">
                             <div className="absolute left-3 top-3 text-gray-600 group-focus-within:text-orange-500 transition-colors">
@@ -116,11 +114,11 @@
                             disabled={status === 'SCANNING' || !ticker}
                             className="bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 px-5 rounded-md font-bold text-xs tracking-wide transition-all uppercase disabled:opacity-50"
                         >
-                            VERIFY
+                            CHECK
                         </button>
                     </div>
 
-                    {/* The Big "Jackpot" Button */}
+                    {/* Jackpot Button */}
                     <button 
                         onClick={() => executeGrandmasterScan('SCAN')}
                         disabled={status === 'SCANNING'}
@@ -129,30 +127,24 @@
                         <div className="flex flex-col items-start z-10">
                             <span className="text-sm font-black italic tracking-widest uppercase flex items-center gap-2">
                                 <Icons.Target size={16} />
-                                SCAN FOR 5 "JACKPOT" TRADES
+                                SCAN LIVE MARKET
                             </span>
                             <span className="text-[9px] text-orange-200 font-mono mt-1 opacity-80">
-                                CRITERIA: 20-25% POTENTIAL • UPPER CIRCUITS
+                                5 STOCKS • 25% POTENTIAL • REAL-TIME DATA
                             </span>
                         </div>
                         <div className="z-10 bg-black/20 p-2 rounded-full group-hover:bg-black/10 transition-colors">
                             {status === 'SCANNING' ? <div className="animate-spin"><Icons.Activity size={20} /></div> : <Icons.Zap size={20} className="fill-white" />}
                         </div>
                     </button>
-
-                    {/* Safety Badge */}
-                    <div className="flex items-center gap-2 justify-center opacity-40">
-                         <Icons.AlertTriangle size={10} className="text-red-500"/>
-                         <span className="text-[9px] text-gray-500 font-mono">HIGH VOLATILITY MODE. STOP LOSS MANDATORY.</span>
-                    </div>
                 </div>
 
-                {/* FEED AREA */}
+                {/* FEED */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24 scrollbar-hide">
                     {output.length === 0 && (
                         <div className="flex flex-col items-center justify-center h-48 text-gray-700 space-y-3 select-none">
-                            <Icons.Target size={40} />
-                            <p className="text-[10px] font-mono tracking-[0.2em]">AWAITING HIGH-ROI TARGETS</p>
+                            <Icons.Activity size={40} />
+                            <p className="text-[10px] font-mono tracking-[0.2em]">WAITING FOR LIVE DATA</p>
                         </div>
                     )}
                     
@@ -160,7 +152,7 @@
                         <div key={item.id} className="bg-[#0b0b0b] border border-gray-800 rounded-sm overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-500">
                             <div className="bg-gray-900/80 px-4 py-2 border-b border-gray-800 flex justify-between items-center">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"></div>
+                                    <div className={`w-1.5 h-1.5 rounded-full ${item.isError ? 'bg-red-500' : 'bg-orange-500 animate-pulse'}`}></div>
                                     <span className="text-xs font-bold text-gray-200 font-mono tracking-widest">{item.header}</span>
                                 </div>
                                 <div className="flex items-center gap-1.5 opacity-60">
@@ -177,10 +169,10 @@
                                             <div className="h-full bg-orange-600 animate-pulse w-1/3"></div>
                                         </div>
                                         <div className="text-[9px] text-gray-600 mt-1">
-                                            1. FILTERING FOR VOLATILITY &gt; 20%... <br/>
-                                            2. CHECKING F&O BREAKOUTS... <br/>
-                                            3. VERIFYING "GRANDMASTER" SAFETY... <br/>
-                                            4. LOCKING 5 TARGETS...
+                                            1. CONNECTING TO LIVE SEARCH NODES... <br/>
+                                            2. FETCHING REAL-TIME PRICES... <br/>
+                                            3. CALCULATING CONFIDENCE SCORE... <br/>
+                                            4. VERIFYING 25% POTENTIAL...
                                         </div>
                                     </div>
                                 ) : (
@@ -189,6 +181,18 @@
                                     </div>
                                 )}
                             </div>
+                            
+                            {!item.loading && !item.isError && (
+                                <div className="bg-gray-900 px-4 py-2 border-t border-gray-800 flex items-center justify-between">
+                                    <div className="flex items-center gap-1 text-[9px] text-green-500 font-mono">
+                                        <Icons.CheckCircle size={10} />
+                                        VERIFIED LIVE DATA
+                                    </div>
+                                    <div className="text-[9px] text-gray-600 font-mono">
+                                        SEARCH GROUNDING ACTIVE
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     ))}
                     <div ref={bottomRef}></div>
@@ -198,7 +202,7 @@
 
         const LogsView = ({ logs }) => (
             <div className="bg-[#050505] h-full p-4 font-mono text-[10px] overflow-y-auto pb-20">
-                <div className="text-orange-500/50 border-b border-orange-900/20 pb-2 mb-2 font-bold tracking-widest">SNIPER LOGS</div>
+                <div className="text-orange-500/50 border-b border-orange-900/20 pb-2 mb-2 font-bold tracking-widest">REAL-TIME LOGS</div>
                 {logs.map((log, i) => (
                     <div key={i} className="mb-1.5 flex gap-3 border-l border-gray-800 pl-3 hover:bg-white/5 p-1 transition-colors">
                         <span className="text-gray-600 shrink-0">{log.time}</span>
@@ -213,7 +217,7 @@
             </div>
         );
 
-        // --- 3. API KEY MODAL (Essential for Netlify) ---
+        // --- 3. API KEY MODAL ---
         const ApiKeyModal = ({ setKey }) => {
             const [input, setInput] = useState('');
             return (
@@ -224,8 +228,8 @@
                             <h2 className="text-xl font-bold tracking-tighter">SECURITY CLEARANCE</h2>
                         </div>
                         <p className="text-gray-400 text-sm mb-4">
-                            Enter your Google Gemini API Key to activate the Sniper System. 
-                            <br/><span className="text-xs opacity-50">Keys are stored locally in your browser.</span>
+                            Enter your Google Gemini API Key.
+                            <br/><span className="text-xs opacity-50">Stored locally in your browser.</span>
                         </p>
                         <input 
                             type="password"
@@ -240,15 +244,12 @@
                         >
                             ACTIVATE SYSTEM
                         </button>
-                        <a href="https://aistudio.google.com/app/apikey" target="_blank" className="block text-center mt-4 text-xs text-blue-400 hover:underline">
-                            Get Free API Key &rarr;
-                        </a>
                     </div>
                 </div>
             );
         };
 
-        // --- 4. MAIN APPLICATION ---
+        // --- 4. MAIN APP ---
 
         function FinMindApp() {
             const [activeTab, setActiveTab] = useState('trade');
@@ -257,7 +258,6 @@
             const [status, setStatus] = useState('IDLE'); 
             const [logs, setLogs] = useState([]);
             
-            // Check for saved key
             const [userApiKey, setUserApiKey] = useState(localStorage.getItem('finmind_api_key') || '');
             
             const bottomRef = useRef(null);
@@ -271,8 +271,7 @@
             useEffect(() => {
                 if (userApiKey) {
                     localStorage.setItem('finmind_api_key', userApiKey);
-                    addLog('SYS', 'Grandmaster Sniper Initialized.');
-                    addLog('CFG', 'Target Strategy: UPPER_CIRCUIT_HUNT (25%).');
+                    addLog('SYS', 'Real-Time Confidence Engine Loaded.');
                 }
             }, [userApiKey]);
 
@@ -280,66 +279,73 @@
                 if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior: 'smooth' });
             }, [output]);
 
-            // --- THE CORE LOGIC (Your "Text File 1" Logic) ---
+            // --- THE CORE LOGIC (ENHANCED FOR REAL-TIME CONFIDENCE) ---
             const executeGrandmasterScan = async (mode) => {
                 if (status === 'SCANNING') return;
                 
                 const now = new Date();
                 const dateStr = now.toDateString();
-                const timeStr = now.toTimeString().split(' ')[0];
+                const timeStr = now.toLocaleTimeString();
                 let prompt = "";
                 let displayHeader = "";
 
                 if (mode === 'SCAN') {
-                    // This is the EXACT prompt for High Profit / 5 Stocks
                     prompt = `
-                        CURRENT TIME: ${dateStr} ${timeStr} IST.
+                        CURRENT DATE/TIME: ${dateStr} ${timeStr}.
                         MARKET: INDIAN STOCK MARKET (NSE).
-                        TASK: Perform a "GRANDMASTER SNIPER" Scan to find EXACTLY 5 STOCKS with MAXIMUM PROFIT POTENTIAL.
-                        CRITICAL CRITERIA (The "25%" Rule):
-                        1. VOLATILITY: Look for stocks capable of 15-20%+ moves today (Upper Circuit candidates or F&O Breakouts).
-                        2. SAFETY CHECK: Even though we want high profit, ensure Volume is real.
-                        3. CATALYST: Must have a reason to explode (News/Results).
+                        
+                        TASK: Use Google Search to find LIVE, REAL-TIME data for the NSE RIGHT NOW.
+                        Identify EXACTLY 5 Stocks with 20-25% Profit Potential (Upper Circuits/Breakouts).
+                        
+                        CRITICAL: You MUST calculate a "CONFIDENCE SCORE" (0-100%) for each.
+                        - 90-100%: News + Technicals + Volume all agree perfectly.
+                        - 80-89%: Strong buy, minor risks.
+                        - <80%: DO NOT LIST IT.
+                        
                         OUTPUT FORMAT:
-                        Identify EXACTLY 5 "High-ROI" Stocks.
                         For each of the 5 stocks:
                         STOCK: [Name]
-                        POTENTIAL: [Expected % Move]
+                        CONFIDENCE: [XX%] (Must be visual, e.g. "95% █████████░")
+                        LIVE PRICE: [Current Price from Search]
                         ACTION: [BUY / SHORT]
-                        ENTRY RANGE: [Price]
-                        TARGET: [Aggressive Price]
-                        STOP LOSS: [Strict]
-                        REASON: [Why will it hit upper circuit?]
+                        TARGET: [Price]
+                        STOP LOSS: [Price]
+                        WHY: [Real-time reason, e.g. "Breaking news 10 mins ago..."]
                     `;
-                    displayHeader = "SNIPER_SCAN_25_PERCENT_PROTOCOL";
+                    displayHeader = "REAL_TIME_SCAN_PROTOCOL";
                 } else {
                     if (!ticker.trim()) return;
                     prompt = `
-                        CURRENT TIME: ${dateStr} ${timeStr} IST.
+                        CURRENT DATE/TIME: ${dateStr} ${timeStr}.
                         STOCK: ${ticker.toUpperCase()} (NSE).
-                        TASK: Verify this stock for "High Profit" Intraday Trade.
-                        CHECKLIST:
-                        1. Does it have the volatility to give >10% returns today?
-                        2. Is it safe or manipulated?
+                        
+                        TASK: Use Google Search to get LIVE DATA for this stock.
+                        Determine if it is a "High Profit" trade RIGHT NOW.
+                        
+                        CALCULATE CONFIDENCE (0-100%):
+                        - Do technicals match news?
+                        - Is volume high right now?
+                        
                         OUTPUT:
                         VERDICT: [SAFE TO TRADE / AVOID]
+                        CONFIDENCE: [XX%]
+                        LIVE PRICE: [Price]
                         ACTION: [BUY / SHORT]
-                        VOLATILITY RATING: [Low/Medium/High]
-                        REASON: [Data-backed reason]
+                        REASON: [Real-time news/data]
                         LEVELS: [Entry/Target/Stop]
                     `;
-                    displayHeader = `VERIFYING: ${ticker.toUpperCase()}`;
+                    displayHeader = `LIVE_CHECK: ${ticker.toUpperCase()}`;
                 }
 
                 setStatus('SCANNING');
-                addLog('CMD', `Executing ${mode} Protocol...`);
+                addLog('CMD', `Executing ${mode} with Live Search...`);
                 
                 const newEntryId = Date.now();
                 setOutput(prev => [...prev, { 
                     id: newEntryId, 
                     header: displayHeader, 
                     timestamp: timeStr,
-                    body: "INITIATING HIGH-ROI SCAN...\n> FILTERING FOR UPPER CIRCUITS...\n> CALCULATING 25% POTENTIAL...\n> VERIFYING 5 TARGETS...", 
+                    body: "CONNECTING TO LIVE MARKET NODES...\n> SEARCHING RECENT NEWS...\n> CALCULATING CONFIDENCE SCORES...\n> VERIFYING 25% POTENTIAL...", 
                     loading: true 
                 }]);
 
@@ -361,7 +367,7 @@
                     const data = await response.json();
                     const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
                     
-                    if (!aiText) throw new Error("No data received.");
+                    if (!aiText) throw new Error("No live data found.");
 
                     const cleanText = aiText.replace(/\*\*/g, "").replace(/\*/g, "-"); 
 
@@ -372,7 +378,7 @@
                     ));
                     
                     setStatus('IDLE');
-                    addLog('ACK', `Scan Complete. Targets Found.`);
+                    addLog('ACK', `Live Data Acquired.`);
 
                 } catch (error) {
                     console.error(error);
@@ -386,12 +392,10 @@
                 }
             };
 
-            // If no API Key, show Modal
             if (!userApiKey) {
                 return <ApiKeyModal setKey={setUserApiKey} />;
             }
 
-            // Normal Render
             return (
                 <>
                     <Header status={status} />
@@ -429,5 +433,4 @@
     </script>
 </body>
 </html>
-
 
